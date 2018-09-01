@@ -30,7 +30,7 @@ public class NativeFFmpeg {
      * @param processPercent
      */
     public void getEncodeProcess(int processPercent){
-        Log.d("HH","encodePercent " + processPercent + "%");
+
     }
 
 
@@ -42,7 +42,8 @@ public class NativeFFmpeg {
     }
 
     public interface IAudioEncodeProgressListener{
-        void nowProgress(int progress);
+        void nowProgress(double progress);
+        void audioEncodeOver(boolean bAudioEncodeOver);
     }
 
 

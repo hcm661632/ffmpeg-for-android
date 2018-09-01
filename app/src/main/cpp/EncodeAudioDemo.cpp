@@ -157,13 +157,14 @@ beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, 
         ALOGE("No such class");
     }
     jmethodID methodID = (globalEnv)->GetMethodID(ffmpegClass, "getEncodeProcess", "(I)V");
-    jmethodID callbackMethod = globalEnv->GetMethodID(listenerClass, "nowProgress", "(I)V");
-    if (methodID == NULL || callbackMethod == NULL) {
+    jmethodID callbackMethod = globalEnv->GetMethodID(listenerClass, "nowProgress", "(D)V");
+    jmethodID callbackMethodOver = globalEnv->GetMethodID(listenerClass, "audioEncodeOver", "(Z)V");
+    if (methodID == NULL || callbackMethod == NULL || callbackMethodOver == NULL) {
         ALOGE("No such method");
         global_VM->DetachCurrentThread();
     }
-
-    for (int i = 0; i < 200; ++i) {
+    float_t  count = 500;
+    for (int i = 0; i < count; ++i) {
         /* make sure the frame is writable -- makes a copy if the encoder
          * kept a reference internally */
         ret = av_frame_make_writable(frame);
@@ -184,8 +185,11 @@ beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, 
         encode(avCodecContext, frame, pkt, f);
         // Callback the progress
         (globalEnv)->CallVoidMethod(globalFFmpegRef, methodID, i);
-        globalEnv->CallVoidMethod(globalAudioEncodeListener, callbackMethod, i);
+
+        globalEnv->CallVoidMethod(globalAudioEncodeListener, callbackMethod, i / count * 100); // 转化为百分比 double
     }
+    // callback AudiioEncodeOver to Java App
+        globalEnv->CallVoidMethod(globalAudioEncodeListener,callbackMethodOver, true);
 
     if (nativeThreadAttatch) {
         // 释放全局引用

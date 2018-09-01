@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -89,12 +90,31 @@ public class MainActivity extends Activity implements View.OnClickListener {
         @Override
         protected void onProgressUpdate(Integer... values) {
             audioEncodeProgressBar.setProgress(values[0]);
+
             super.onProgressUpdate(values);
         }
 
+
+
         @Override
-        public void nowProgress(int progress) {
-            publishProgress(progress);
+        public void nowProgress(double progress) {
+            Log.d("HH","progress from Cpp " +(int) progress);
+            publishProgress((int)progress);
+        }
+
+        @Override
+        public void audioEncodeOver(boolean bAudioEncodeOver) {
+            if(bAudioEncodeOver) {
+                Log.d("HH","Down load over");
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Audio Encode Over", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Audio Encode Over", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
     }
 
@@ -170,8 +190,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.btn_readMediaMetadata:
                 String mediaMetadata = nativeFFmpeg.readMediaMetadata("/sdcard/hh/xrdg.mp3");
                 btnReadMediaMetadata.setText(mediaMetadata);
-
-                new HH().execute();
 
                 break;
 
