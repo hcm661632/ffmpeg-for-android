@@ -1,0 +1,14 @@
+prefix=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm64
+exec_prefix=${prefix}
+libdir=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm64/lib
+includedir=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm64/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 56.14.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: -pthread -lm
+Cflags: -I${includedir}

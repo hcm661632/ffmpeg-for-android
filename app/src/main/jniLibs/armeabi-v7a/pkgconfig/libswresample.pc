@@ -1,0 +1,14 @@
+prefix=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm
+exec_prefix=${prefix}
+libdir=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm/lib
+includedir=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm/include
+
+Name: libswresample
+Description: FFmpeg audio resampling library
+Version: 3.1.100
+Requires: 
+Requires.private: libavutil >= 56.14.100
+Conflicts:
+Libs: -L${libdir}  -lswresample 
+Libs.private: -lm
+Cflags: -I${includedir}
