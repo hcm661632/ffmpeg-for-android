@@ -24,6 +24,16 @@ void JNICALL
 Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudioWithListener(JNIEnv *env, jobject instance,
                                                                jobject outFile, jobject listener);
 
+
+
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance, jobject outFile,
+                                                   jstring codecName_);
+
+
+
+
+
 #ifdef __cplusplus
 }
 #endif

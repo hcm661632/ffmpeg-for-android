@@ -8,9 +8,11 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <libavcodec/avcodec.h>
-#include "include/EncodeAudioDemo.h"
-#include "include/androidlog.h"
+#include <libavutil/opt.h>
+#include <libavutil/imgutils.h>
 
+#include "include/EncodeAVDemo.h"
+#include "include/androidlog.h"
 jobject globalFFmpegRef;
 jobject globalAudioEncodeListener;
 
@@ -163,7 +165,7 @@ beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, 
         ALOGE("No such method");
         global_VM->DetachCurrentThread();
     }
-    float_t  count = 500;
+    float_t  count = 200;
     for (int i = 0; i < count; ++i) {
         /* make sure the frame is writable -- makes a copy if the encoder
          * kept a reference internally */
@@ -185,7 +187,6 @@ beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, 
         encode(avCodecContext, frame, pkt, f);
         // Callback the progress
         (globalEnv)->CallVoidMethod(globalFFmpegRef, methodID, i);
-
         globalEnv->CallVoidMethod(globalAudioEncodeListener, callbackMethod, i / count * 100); // 转化为百分比 double
     }
     // callback AudiioEncodeOver to Java App
@@ -278,7 +279,7 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudio(JNIEnv *env, jobject instance
     globalAudioEncodeListener = env->NewGlobalRef(listenerobj);
 
 
-    ALOGM("%d", __DATE__);
+    ALOGM("%s", __DATE__);
     const char *filename = getEncodeFilePath(env, outFile);
     const AVCodec *avCodec;
     AVCodecContext *avCodecContext = NULL;
@@ -390,4 +391,124 @@ const char *getEncodeFilePath(JNIEnv *env, const jobject outFile) {
     ALOGI("%s\t, Line = %d\t,outFilePath = %s", __FUNCTION__, __LINE__,
           env->GetStringUTFChars(jstringPath, 0));
     return env->GetStringUTFChars(jstringPath, 0);
+}
+
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance, jobject outFile,
+                                                   jstring codecName_) {
+    const char *codecName = env->GetStringUTFChars(codecName_, 0);
+    const char *encodeVideoFileName = getEncodeFilePath(env, outFile);
+    const AVCodec *codec;
+    AVCodecContext *c;
+    AVFrame *frame;
+    AVPacket *pkt;
+
+    codec = avcodec_find_encoder(AV_CODEC_ID_MPEG1VIDEO);
+    if(!codec) {
+        ALOGE("Video Codec Not found");exit(1);
+    }
+    c = avcodec_alloc_context3(codec);
+    if(!c){
+        ALOGE("Could not allocate VideoCodecContext");exit(1);
+    }
+
+    pkt = av_packet_alloc();
+    if(!pkt) exit(1);
+
+
+    /* put sample parameters */
+    c->bit_rate = 400000;
+    /* resolution must be a multiple of two */
+    c->width = 352;
+    c->height = 288;
+    /* frames per second */
+    c->time_base = (AVRational){1, 25};
+    c->framerate = (AVRational){25, 1};
+
+    /* emit one intra frame every ten frames
+     * check frame pict_type before passing frame
+     * to encoder, if frame->pict_type is AV_PICTURE_TYPE_I
+     * then gop_size is ignored and the output of encoder
+     * will always be I frame irrespective to gop_size
+     */
+    c->gop_size = 10;
+    c->max_b_frames = 1;
+    c->pix_fmt = AV_PIX_FMT_YUV420P;
+
+    if (codec->id == AV_CODEC_ID_H264)
+        av_opt_set(c->priv_data, "preset", "slow", 0);
+
+    /* open it */
+   int  ret = avcodec_open2(c, codec, NULL);
+    if (ret < 0) {
+        ALOGE("Could not open codec: %s\n", av_err2str(ret));
+        exit(1);
+    }
+
+    FILE *f = fopen(encodeVideoFileName, "wb");
+    if (!f) {
+        ALOGE("Could not open %s\n", encodeVideoFileName);
+        exit(1);
+    }
+
+    frame = av_frame_alloc();
+    if (!frame) {
+        ALOGE("Could not allocate video frame\n");
+        exit(1);
+    }
+    frame->format = c->pix_fmt;
+    frame->width  = c->width;
+    frame->height = c->height;
+
+    ret = av_frame_get_buffer(frame, 32);
+
+    if (ret < 0) {
+        ALOGE( "Could not allocate the video frame data\n");
+        exit(1);
+    }
+
+
+    /* encode 10 second of video */
+    for (int i = 0; i < 25 * 10; i++) {
+        fflush(stdout);
+
+        /* make sure the frame data is writable */
+        ret = av_frame_make_writable(frame);
+        if (ret < 0)
+            exit(1);
+
+        /* prepare a dummy image */
+        /* Y */
+        for (int y = 0; y < c->height; y++) {
+            for (int x = 0; x < c->width; x++) {
+                frame->data[0][y * frame->linesize[0] + x] = x + y + i * 3;
+            }
+        }
+
+        /* Cb and Cr */
+        for (int y = 0; y < c->height/2; y++) {
+            for (int x = 0; x < c->width/2; x++) {
+                frame->data[1][y * frame->linesize[1] + x] = 128 + y + i * 2;
+                frame->data[2][y * frame->linesize[2] + x] = 64 + x + i * 5;
+            }
+        }
+
+        frame->pts = i;
+
+        /* encode the image */
+        encode(c, frame, pkt, f);
+    }
+    /* flush the encoder */
+    encode(c, NULL, pkt, f);
+
+    /* add sequence end code to have a real MPEG file */
+    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
+    fwrite(endcode, 1, sizeof(endcode), f);
+    fclose(f);
+
+    avcodec_free_context(&c);
+    av_frame_free(&frame);
+    av_packet_free(&pkt);
+
+    env->ReleaseStringUTFChars(codecName_, codecName);
 }

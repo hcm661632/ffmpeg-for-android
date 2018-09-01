@@ -32,7 +32,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private NativeFFmpeg nativeFFmpeg;
-    private Button btnDecodeAudio, btn_encodeAudio, btnReadMediaInfo, btnReadMediaMetadata;
+    private Button btnDecodeAudio, btn_encodeAudio, btnReadMediaInfo, btnReadMediaMetadata,btn_encodeVideo;
     private ProgressBar audioEncodeProgressBar;
 
     @Override
@@ -55,6 +55,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btn_encodeAudio = findViewById(R.id.btn_encodeAudio);
         btn_encodeAudio.setOnClickListener(this);
         audioEncodeProgressBar = findViewById(R.id.audioEncodeProgressBar);
+        btn_encodeVideo = findViewById(R.id.btn_encodeVideo);
+        btn_encodeVideo.setOnClickListener(this);
 
 
     }
@@ -151,32 +153,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE
                     }, 0);
                 } else {
-
-                    File outFile = new File("/sdcard/hh/aout.mp3");
-                    if (!outFile.exists()) try {
-                        outFile.createNewFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    createAssignFile("/sdcard/hh/aout.mp3");
                     nativeFFmpeg.decodeAudio("/sdcard/hh/xrdg.mp3", "sdcard/hh/aout.mp3");
                 }
                 break;
 
             case R.id.btn_encodeAudio:
-                final File outFile = new File("/sdcard/hh/encodeAudioDemo.mp3");
-                String absolutePath = outFile.getAbsolutePath();
-                if (!outFile.exists()) try {
-                    outFile.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-             /*   new Thread(){
-                    @Override
-                    public void run() {
-                        nativeFFmpeg.encodeAudio(outFile,64000,44100, 3,2);
-                    }
-                }.start();*/
-                //   nativeFFmpeg.encodeAudio(outFile, 64000, 44100, 3 /*At least 3*/, 2);
+                createAssignFile("/sdcard/hh/encodeAudioDemo.mp3");
                 new HH().execute();
                 break;
 
@@ -193,9 +176,24 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 break;
 
-
+            case R.id.btn_encodeVideo:
+                File videoFile = createAssignFile("/sdcard/hh/encodeVideoDemo.mp4");
+                nativeFFmpeg.encodeVideo(videoFile,"mpeg4");
+                break;
             default:
                 break;
         }
+    }
+
+    private final File createAssignFile(String fileName) {
+        final File outFile = new File(fileName);
+        String absolutePath = outFile.getAbsolutePath();
+        if (!outFile.exists()) try {
+             outFile.createNewFile();
+             return outFile;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return outFile;
     }
 }

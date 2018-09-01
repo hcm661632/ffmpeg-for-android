@@ -140,12 +140,12 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_readMediaInfo(JNIEnv *env, jobject instan
         ALOGE("%s\n", errRet);
         return env->NewStringUTF(errRet);
     }
-
+    return env->NewStringUTF("Default");
 }
 
 char *getShowInfo(AVFormatContext *fmt_ctx, const char *indent) {
     AVDictionaryEntry *tag = NULL;
-    char getShowInfo[512];
+    char getShowInfo[512];memset(getShowInfo,0,512);
     char tempFormat[64];
     while ((tag = av_dict_get(fmt_ctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
 //        ALOGI("%s=%s\n", tag->key, tag->value);
@@ -171,7 +171,6 @@ char *getShowInfo(AVFormatContext *fmt_ctx, const char *indent) {
         strcat(getShowInfo,"N/A");
 //        ALOGI("N/A");
     }
-
     return getShowInfo;
 }
 
