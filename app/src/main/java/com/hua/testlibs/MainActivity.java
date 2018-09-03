@@ -100,7 +100,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         @Override
         public void nowProgress(double progress) {
-            Log.d("HH","progress from Cpp " +(int) progress);
+//            Log.d("HH","progress from Cpp " +(int) progress);
             publishProgress((int)progress);
         }
 
@@ -160,6 +160,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
             case R.id.btn_encodeAudio:
                 createAssignFile("/sdcard/hh/encodeAudioDemo.mp3");
+
+//                new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        nativeFFmpeg.encodeAudioWhtiPthread("/sdcard/hh/encodeAudioDemo.mp3");
+//                    }
+//                }).start();
+
+//                nativeFFmpeg.encodeAudioWhtiPthread("/sdcard/hh/encodeAudioDemo.mp3");
+
                 new HH().execute();
                 break;
 

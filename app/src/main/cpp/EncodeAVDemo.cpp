@@ -13,6 +13,7 @@
 
 #include "include/EncodeAVDemo.h"
 #include "include/androidlog.h"
+
 jobject globalFFmpegRef;
 jobject globalAudioEncodeListener;
 
@@ -24,7 +25,7 @@ static void *
 beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, FILE *f);
 
 void createNativeThread(void *);
-
+void createNativeThread2(void *argc);
 
 typedef struct encodeAudio {
     AVCodecContext *avCodecContext;
@@ -90,7 +91,6 @@ static int select_channel_layout(const AVCodec *codec) {
 static void encode(AVCodecContext *ctx, AVFrame *frame, AVPacket *pkt,
                    FILE *output) {
     int ret;
-
     /* send the frame for encoding */
     ret = avcodec_send_frame(ctx, frame);
     if (ret < 0) {
@@ -102,9 +102,10 @@ static void encode(AVCodecContext *ctx, AVFrame *frame, AVPacket *pkt,
      * number of them */
     while (ret >= 0) {
         ret = avcodec_receive_packet(ctx, pkt);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+            ALOGD("%d, AVERROR_EOF %d", ret, AVERROR_EOF);
             return;
-        else if (ret < 0) {
+        } else if (ret < 0) {
             fprintf(stderr, "Error encoding audio frame\n");
             exit(1);
         }
@@ -113,6 +114,165 @@ static void encode(AVCodecContext *ctx, AVFrame *frame, AVPacket *pkt,
         av_packet_unref(pkt);
     }
 }
+
+/**
+ *
+ * @param argc
+ * @return 这个一定要有。。
+ */
+static void *encodeAudioThreadMthod(void *argc) {
+    const AVCodec *avCodec;
+    AVCodecContext *avCodecContext = NULL;
+    AVFrame *frame;
+    AVPacket *pkt;
+    int ret;
+    FILE *f;
+    uint16_t *samples;
+    float t, tincr;
+    const char *filename = "/sdcard/hh/encodeAudioDemo.mp3";
+//     Find the MP2/MP3 encoder
+    avCodec = avcodec_find_encoder(AV_CODEC_ID_MP2);
+
+    ALOGE("tid = %d",gettid());
+
+    if (!avCodec) {
+        ALOGE("%s", "Codec not found");
+        exit(1);
+    }
+    avCodecContext = avcodec_alloc_context3(avCodec);
+    if (!avCodecContext) {
+        ALOGE("%s", "Could not allocate audio codec context");
+        exit(1);
+    }
+    // 这个有什么用呢， SAMPLE_FMT_S16
+    avCodecContext->sample_fmt = AV_SAMPLE_FMT_S16;
+    if (!check_sample_fmt(avCodec, avCodecContext->sample_fmt)) {
+        ALOGE("Encoder does not support sample format %s",
+              av_get_sample_fmt_name(avCodecContext->sample_fmt));
+        exit(1);
+    }
+//     select other audio parameters supported by the encoder
+
+    avCodecContext->sample_rate = select_sample_rate(avCodec);//sampleRate;
+    avCodecContext->bit_rate = 64000;
+    avCodecContext->channel_layout = select_channel_layout(avCodec); //best_ch_layout;
+    avCodecContext->channels = av_get_channel_layout_nb_channels(avCodecContext->channel_layout);
+
+//    Open it
+    if (avcodec_open2(avCodecContext, avCodec, NULL) < 0) {
+        ALOGE("Could not open codec");
+        exit(1);
+    }
+
+    int fd = open(filename, O_WRONLY);
+    if (fd < 0) {
+        ALOGE("Could not open %s", filename);
+        exit(1);
+    }
+    //" wb "  write binary
+    f = fdopen(fd, "wb");
+
+    /* packet for holding encoded output */
+    pkt = av_packet_alloc();
+    if (!pkt) {
+        ALOGE("Could not av_packet_alloc");
+        exit(1);
+    }
+    frame = av_frame_alloc();
+    if (!frame) {
+        ALOGE("Could not av_frame_alloc");
+        exit(1);
+    }
+//    select other audio parameters supported by the encoder
+    frame->nb_samples = avCodecContext->frame_size;
+    frame->channel_layout = avCodecContext->channel_layout;
+    frame->format = avCodecContext->sample_fmt;
+
+    // allocate the data buffers
+    ret = av_frame_get_buffer(frame, 0);
+    if (ret < 0) {
+        ALOGE("Could not allocate audio data buffers %s", av_err2str(ret));
+        exit(1);
+    }
+
+    //TODO
+    t = 0;
+    tincr = 2 * M_PI * 440.0 / avCodecContext->sample_rate;
+
+    //获取当前native线程是否有没有被附加到jvm环境中
+    ALOGE("Begin Encode Audio");
+
+
+    jint nativeThreadAttatch = JNI_FALSE;
+    JNIEnv *globalEnv;
+    jint getEnv = global_VM->GetEnv((void **) &globalEnv, JNI_VERSION_1_6);
+    ALOGE("tid = %d,getEnv = %d\n", gettid(), getEnv);   // 这里确实是 -2 ，没有被加到当前线程中
+    if (getEnv == JNI_EDETACHED) {
+        ALOGE("Current native thread has not attach to jvm");
+        if (global_VM->AttachCurrentThread(&globalEnv, NULL) == 0) {
+            nativeThreadAttatch = JNI_TRUE;
+        } else {
+            exit(0);
+        }
+    }
+    jclass ffmpegClass = (globalEnv)->GetObjectClass(globalFFmpegRef);
+    jclass listenerClass = globalEnv->GetObjectClass(globalAudioEncodeListener);
+    if (ffmpegClass == NULL) {
+        ALOGE("No such class");
+    }
+    jmethodID methodID = (globalEnv)->GetMethodID(ffmpegClass, "getEncodeProcess", "(I)V");
+    jmethodID callbackMethod = globalEnv->GetMethodID(listenerClass, "nowProgress", "(D)V");
+    jmethodID callbackMethodOver = globalEnv->GetMethodID(listenerClass, "audioEncodeOver", "(Z)V");
+    if (methodID == NULL || callbackMethod == NULL || callbackMethodOver == NULL) {
+        ALOGE("No such method");
+        global_VM->DetachCurrentThread();
+    }
+
+
+    float count = 200;
+    for (int i = 0; i <  count; ++i) {
+        /* make sure the frame is writable -- makes a copy if the encoder
+         * kept a reference internally */
+        ret = av_frame_make_writable(frame);
+        if (ret < 0) {
+            ALOGE("av_frame_make_writable");
+            exit(1);
+        }
+        usleep(1000 * 100); // 100ms   , total = 100ms * 200 = 20s , ANR
+        uint16_t *samples = (uint16_t *) frame->data[0];
+        for (int j = 0; j < avCodecContext->frame_size; ++j) {
+            samples[2 * j] = sin(t) * 10000;
+
+            for (int k = 1; k < avCodecContext->channels; ++k) {
+                samples[2 * j + k] = samples[2 * j];
+            }
+            t += tincr;
+        }
+        encode(avCodecContext, frame, pkt, f);
+        globalEnv->CallVoidMethod(globalAudioEncodeListener,callbackMethod,i / count * 100);
+    }
+    globalEnv->CallVoidMethod(globalAudioEncodeListener,callbackMethodOver,true);
+    // flush the encoder
+    encode(avCodecContext, NULL, pkt, f);
+    ALOGM("######################  END #########################");
+
+    if (nativeThreadAttatch) {
+        // 释放全局引用
+        globalEnv->DeleteGlobalRef(globalFFmpegRef);
+        globalEnv->DeleteGlobalRef(globalAudioEncodeListener);
+        globalEnv = NULL;
+        global_VM->DetachCurrentThread();
+
+    }
+    //TODO
+    fclose(f);
+    av_frame_free(&frame);
+    av_packet_free(&pkt);
+    avcodec_free_context(&avCodecContext);
+
+    return NULL;
+}
+
 
 static void *encodeAudioMethod(void *argc) {
     ALOGM("Thread start");
@@ -131,13 +291,14 @@ static void *encodeAudioMethod(void *argc) {
     avcodec_free_context(&audio->avCodecContext);
 
     pthread_exit(NULL);
+    return NULL;
 }
 
 
 static void *
 beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, FILE *f) {
-    int t = 0, ret = 0;
-    int tincr = 2 * M_PI * 440.0 / avCodecContext->sample_rate;
+    int ret = 0;
+    float t = 0, tincr = 2 * M_PI * 440.0 / avCodecContext->sample_rate;
 
     //获取当前native线程是否有没有被附加到jvm环境中
     ALOGE("Begin Encode Audio");
@@ -165,8 +326,8 @@ beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, 
         ALOGE("No such method");
         global_VM->DetachCurrentThread();
     }
-    float_t  count = 200;
-    for (int i = 0; i < count; ++i) {
+    float count = 50.0f;
+    for (int i = 0; i < (int) count; ++i) {
         /* make sure the frame is writable -- makes a copy if the encoder
          * kept a reference internally */
         ret = av_frame_make_writable(frame);
@@ -187,10 +348,11 @@ beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, 
         encode(avCodecContext, frame, pkt, f);
         // Callback the progress
         (globalEnv)->CallVoidMethod(globalFFmpegRef, methodID, i);
-        globalEnv->CallVoidMethod(globalAudioEncodeListener, callbackMethod, i / count * 100); // 转化为百分比 double
+        globalEnv->CallVoidMethod(globalAudioEncodeListener, callbackMethod,
+                                  i / count * 100); // 转化为百分比 double
     }
     // callback AudiioEncodeOver to Java App
-        globalEnv->CallVoidMethod(globalAudioEncodeListener,callbackMethodOver, true);
+    globalEnv->CallVoidMethod(globalAudioEncodeListener, callbackMethodOver, true);
 
     if (nativeThreadAttatch) {
         // 释放全局引用
@@ -203,7 +365,7 @@ beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, 
     // flush the encoder
     encode(avCodecContext, NULL, pkt, f);
     ALOGM("######################  END #########################");
-    pthread_exit(NULL);
+    return NULL;
 }
 
 
@@ -278,7 +440,6 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudio(JNIEnv *env, jobject instance
     globalFFmpegRef = env->NewGlobalRef(instance);
     globalAudioEncodeListener = env->NewGlobalRef(listenerobj);
 
-
     ALOGM("%s", __DATE__);
     const char *filename = getEncodeFilePath(env, outFile);
     const AVCodec *avCodec;
@@ -301,7 +462,6 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudio(JNIEnv *env, jobject instance
         ALOGE("%s", "Could not allocate audio codec context");
         exit(1);
     }
-
     // 这个有什么用呢， SAMPLE_FMT_S16
     avCodecContext->sample_fmt = AV_SAMPLE_FMT_S16;
     if (!check_sample_fmt(avCodec, avCodecContext->sample_fmt)) {
@@ -362,6 +522,7 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudio(JNIEnv *env, jobject instance
 
     //TODO  创建线程去完成耗时的编码
     createNativeThread(encodeAudio1);
+//    createNativeThread2(NULL);
 #if 0
     beginEncodeAudio(avCodecContext, frame, pkt, f);
 
@@ -375,7 +536,14 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudio(JNIEnv *env, jobject instance
 
 void createNativeThread(void *encodeAudio) {
     pthread_t encodeAudioThread;
-    pthread_create(&encodeAudioThread, NULL, encodeAudioMethod, encodeAudio);
+//    pthread_create(&encodeAudioThread, NULL, encodeAudioMethod, encodeAudio);
+    pthread_create(&encodeAudioThread, NULL, encodeAudioThreadMthod, encodeAudio);
+}
+
+
+void createNativeThread2(void *argc) {
+    pthread_t encodeAudioThread2;
+    pthread_create(&encodeAudioThread2, NULL, encodeAudioThreadMthod, NULL);
 }
 
 const char *getEncodeFilePath(JNIEnv *env, const jobject outFile) {
@@ -404,16 +572,18 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
     AVPacket *pkt;
 
     codec = avcodec_find_encoder(AV_CODEC_ID_MPEG1VIDEO);
-    if(!codec) {
-        ALOGE("Video Codec Not found");exit(1);
+    if (!codec) {
+        ALOGE("Video Codec Not found");
+        exit(1);
     }
     c = avcodec_alloc_context3(codec);
-    if(!c){
-        ALOGE("Could not allocate VideoCodecContext");exit(1);
+    if (!c) {
+        ALOGE("Could not allocate VideoCodecContext");
+        exit(1);
     }
 
     pkt = av_packet_alloc();
-    if(!pkt) exit(1);
+    if (!pkt) exit(1);
 
 
     /* put sample parameters */
@@ -422,8 +592,8 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
     c->width = 352;
     c->height = 288;
     /* frames per second */
-    c->time_base = (AVRational){1, 25};
-    c->framerate = (AVRational){25, 1};
+    c->time_base = (AVRational) {1, 25};
+    c->framerate = (AVRational) {25, 1};
 
     /* emit one intra frame every ten frames
      * check frame pict_type before passing frame
@@ -439,7 +609,7 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
         av_opt_set(c->priv_data, "preset", "slow", 0);
 
     /* open it */
-   int  ret = avcodec_open2(c, codec, NULL);
+    int ret = avcodec_open2(c, codec, NULL);
     if (ret < 0) {
         ALOGE("Could not open codec: %s\n", av_err2str(ret));
         exit(1);
@@ -457,13 +627,13 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
         exit(1);
     }
     frame->format = c->pix_fmt;
-    frame->width  = c->width;
+    frame->width = c->width;
     frame->height = c->height;
 
     ret = av_frame_get_buffer(frame, 32);
 
     if (ret < 0) {
-        ALOGE( "Could not allocate the video frame data\n");
+        ALOGE("Could not allocate the video frame data\n");
         exit(1);
     }
 
@@ -486,8 +656,8 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
         }
 
         /* Cb and Cr */
-        for (int y = 0; y < c->height/2; y++) {
-            for (int x = 0; x < c->width/2; x++) {
+        for (int y = 0; y < c->height / 2; y++) {
+            for (int x = 0; x < c->width / 2; x++) {
                 frame->data[1][y * frame->linesize[1] + x] = 128 + y + i * 2;
                 frame->data[2][y * frame->linesize[2] + x] = 64 + x + i * 5;
             }
@@ -502,7 +672,7 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
     encode(c, NULL, pkt, f);
 
     /* add sequence end code to have a real MPEG file */
-    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
+    uint8_t endcode[] = {0, 0, 1, 0xb7};
     fwrite(endcode, 1, sizeof(endcode), f);
     fclose(f);
 
@@ -511,4 +681,17 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
     av_packet_free(&pkt);
 
     env->ReleaseStringUTFChars(codecName_, codecName);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudioWhtiPthread(JNIEnv *env, jobject instance,
+                                                              jstring filePath_) {
+
+
+//    const char *filename2 = env->GetStringUTFChars(filePath_, 0);
+
+    createNativeThread2(NULL);
+
+//    env->ReleaseStringUTFChars(filePath_, filename2);
 }
