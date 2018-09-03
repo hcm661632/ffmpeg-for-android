@@ -10,9 +10,14 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+#include <libswresample/swresample.h>
+
 
 #include "include/EncodeAVDemo.h"
 #include "include/androidlog.h"
+/* Add for ANativeWindow*/
+#include <android/native_window.h>
 
 jobject globalFFmpegRef;
 jobject globalAudioEncodeListener;
@@ -51,7 +56,6 @@ static int check_sample_fmt(const AVCodec *codec, enum AVSampleFormat sampleForm
 static int select_sample_rate(const AVCodec *codec) {
     const int *p;
     int best_samplerate = 0;
-
     if (!codec->supported_samplerates)
         return 44100;
 

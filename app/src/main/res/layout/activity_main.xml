@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.hua.testlibs.MainActivity">
+    tools:context="com.hua.testlibs.activity.MainActivity">
 
     <TextView
         android:id="@+id/sample_text"
@@ -52,6 +52,13 @@
     <Button
         android:id="@+id/btn_encodeVideo"
         android:text="Encode Video"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+
+    <Button
+        android:id="@+id/btn_nativePlay"
+        android:text="Native Play Video Or Music Use FFMPEG"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </LinearLayout>

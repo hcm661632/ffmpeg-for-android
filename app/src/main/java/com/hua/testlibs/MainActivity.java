@@ -3,6 +3,7 @@ package com.hua.testlibs;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hua.nativeFFmpeg.NativeFFmpeg;
+import com.hua.testlibs.activity.NativePlayActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +34,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private NativeFFmpeg nativeFFmpeg;
-    private Button btnDecodeAudio, btn_encodeAudio, btnReadMediaInfo, btnReadMediaMetadata,btn_encodeVideo;
+    private Button btnDecodeAudio, btn_encodeAudio, btnReadMediaInfo, btnReadMediaMetadata,btn_encodeVideo,btn_nativePlay;
     private ProgressBar audioEncodeProgressBar;
 
     @Override
@@ -57,6 +59,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         audioEncodeProgressBar = findViewById(R.id.audioEncodeProgressBar);
         btn_encodeVideo = findViewById(R.id.btn_encodeVideo);
         btn_encodeVideo.setOnClickListener(this);
+        btn_nativePlay = findViewById(R.id.btn_nativePlay);
+        btn_nativePlay.setOnClickListener(this);
 
 
     }
@@ -190,6 +194,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 File videoFile = createAssignFile("/sdcard/hh/encodeVideoDemo.mp4");
                 nativeFFmpeg.encodeVideo(videoFile,"mpeg4");
                 break;
+
+            case R.id.btn_nativePlay:
+                startActivity(new Intent(this,NativePlayActivity.class));
+                break;
+
             default:
                 break;
         }

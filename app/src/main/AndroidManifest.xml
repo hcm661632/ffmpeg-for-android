@@ -19,7 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".VideoEncodeActivity"></activity>
+        <activity android:name=".activity.NativePlayActivity"></activity>
     </application>
 
 </manifest>

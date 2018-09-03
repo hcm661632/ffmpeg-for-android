@@ -28,6 +28,7 @@ public class NativeFFmpeg {
 
     public native void encodeVideo(File outFile,final String codecName);
 
+
     /**
      *  用于演示普通的回调，也就是找方法而已
      * @param processPercent
