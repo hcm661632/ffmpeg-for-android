@@ -1,7 +1,7 @@
-prefix=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm
+prefix=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/armeabi-v7a
 exec_prefix=${prefix}
-libdir=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm/lib
-includedir=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/arm/include
+libdir=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/armeabi-v7a/lib
+includedir=/home/hua/Downloads/ffmpeg/ffmpeg-4.0.2/android/armeabi-v7a/include
 
 Name: libavformat
 Description: FFmpeg container format library
