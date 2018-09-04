@@ -1,6 +1,7 @@
 package com.hua.nativeFFmpeg;
 
 import android.util.Log;
+import android.view.Surface;
 
 import java.io.File;
 
@@ -25,6 +26,8 @@ public class NativeFFmpeg {
     public native void encodeAudio(File outFile,int bitRate,int sampleRate,int best_ch_layout,int channels,IAudioEncodeProgressListener listener);
     public native void encodeAudioWithListener(File outFile,IAudioEncodeProgressListener listener);
     public native void encodeAudioWhtiPthread(String filePath);
+    public native void nativePlay(String fileName,Surface surface);
+    public native void nativePlayStop(boolean stop);
 
     public native void encodeVideo(File outFile,final String codecName);
 

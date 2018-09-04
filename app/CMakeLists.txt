@@ -28,6 +28,7 @@ add_library( # Sets the name of the library.
              src/main/cpp/native-lib.cpp
              src/main/cpp/readfileInfo.cpp
              src/main/cpp/EncodeAVDemo.cpp
+             src/main/cpp/NativePlayer.cpp
               )
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -42,7 +43,18 @@ find_library( # Sets the name of the path variable.
               # you want CMake to locate.
               log )
 
+find_library( # Sets the name of the path variable.
+              android
+              # Specifies the name of the NDK library that
+              # you want CMake to locate.
+              android )
 
+
+find_library( # Sets the name of the path variable.
+              nativewindow
+              # Specifies the name of the NDK library that
+              # you want CMake to locate.
+              nativewindow )
 
 add_library(
              native-audio
@@ -60,6 +72,9 @@ set_target_properties(
 add_library(avcodec SHARED IMPORTED)
 set_target_properties(avcodec PROPERTIES IMPORTED_LOCATION  ${JNI_LIBS_DIR}/${ANDROID_ABI}/libavcodec.so)
 
+
+#add_library(avdevice SHARED IMPORTED)
+#set_target_properties(avdevice PROPERTIES IMPORTED_LOCATION  ${JNI_LIBS_DIR}/${ANDROID_ABI}/libavdevice.so)
 
 add_library(avfilter SHARED IMPORTED)
 set_target_properties(avfilter PROPERTIES IMPORTED_LOCATION  ${JNI_LIBS_DIR}/${ANDROID_ABI}/libavfilter.so)
@@ -93,6 +108,8 @@ target_link_libraries( # Specifies the target library.
                        #native-audio
 
                        avcodec
+                       #device在NativeWindow显示中也可以不用
+                       #avdevice
                        avfilter
                        avformat
                        avutil
@@ -101,4 +118,8 @@ target_link_libraries( # Specifies the target library.
 
                        # Links the target library to the log library
                        # included in the NDK.
-                       ${log-lib} )
+                       ${log-lib}
+                       #NativeWindow
+                       ${android}
+
+                        )

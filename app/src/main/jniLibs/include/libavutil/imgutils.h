@@ -31,6 +31,9 @@
 #include "pixdesc.h"
 #include "rational.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Compute the max pixel step for each plane of an image with a
  * format described by pixdesc.
@@ -272,6 +275,8 @@ int av_image_fill_black(uint8_t *dst_data[4], const ptrdiff_t dst_linesize[4],
 /**
  * @}
  */
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* AVUTIL_IMGUTILS_H */

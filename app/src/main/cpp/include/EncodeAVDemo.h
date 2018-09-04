@@ -31,8 +31,14 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
                                                    jstring codecName_);
 
 
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlay(JNIEnv *env, jobject instance, jstring fileName_,
+                                                  jobject surface);
 
 
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlayStop(JNIEnv *env, jobject instance,
+                                                      jboolean stop);
 
 #ifdef __cplusplus
 }
