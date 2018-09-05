@@ -24,7 +24,7 @@ jobject globalAudioEncodeListener;
 
 JavaVM *global_VM;
 
-const char *getEncodeFilePath(JNIEnv *env, const jobject outFile);
+
 
 static void *
 beginEncodeAudio(AVCodecContext *avCodecContext, AVFrame *frame, AVPacket *pkt, FILE *f);
@@ -550,20 +550,7 @@ void createNativeThread2(void *argc) {
     pthread_create(&encodeAudioThread2, NULL, encodeAudioThreadMthod, NULL);
 }
 
-const char *getEncodeFilePath(JNIEnv *env, const jobject outFile) {
-    jclass jFileClass = env->GetObjectClass(outFile);
 
-    jmethodID jgetAbsolutePathMethodID = env->GetMethodID(jFileClass, "getAbsolutePath",
-                                                          "()Ljava/lang/String;");
-    if (jgetAbsolutePathMethodID == NULL) {
-        ALOGE("No such method");
-        return "No such method";
-    }
-    jstring jstringPath = (jstring) env->CallObjectMethod(outFile, jgetAbsolutePathMethodID);
-    ALOGI("%s\t, Line = %d\t,outFilePath = %s", __FUNCTION__, __LINE__,
-          env->GetStringUTFChars(jstringPath, 0));
-    return env->GetStringUTFChars(jstringPath, 0);
-}
 
 void JNICALL
 Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance, jobject outFile,

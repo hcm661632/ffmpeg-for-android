@@ -2,16 +2,16 @@
 // Created by FC5981 on 2018/8/31.
 //
 
-#ifndef TESTFFMPEGLIBS_ENCODEAUDIODEMO_H
-#define TESTFFMPEGLIBS_ENCODEAUDIODEMO_H
 
-
+#ifndef TESTFFMPEGLIBS_ENCODEAVDEMO_H
+#define TESTFFMPEGLIBS_ENCODEAVDEMO_H
 #include <jni.h>
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+
 
 void JNICALL
 Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudio(JNIEnv *env, jobject instance, jobject outFile,
@@ -40,8 +40,22 @@ void JNICALL
 Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlayStop(JNIEnv *env, jobject instance,
                                                       jboolean stop);
 
+
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_decodeVideo(JNIEnv *env, jobject instance, jobject srcFile,
+                                                    jobject outFile);
+
+
+const char *getEncodeFilePath(JNIEnv *env,  jobject outFile);
 #ifdef __cplusplus
 }
 #endif
 
-#endif //TESTFFMPEGLIBS_ENCODEAUDIODEMO_H
+
+
+
+
+
+
+
+#endif //TESTFFMPEGLIBS_ENCODEAVDEMO_H

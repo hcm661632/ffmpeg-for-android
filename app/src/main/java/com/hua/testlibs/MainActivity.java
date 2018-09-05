@@ -34,7 +34,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private NativeFFmpeg nativeFFmpeg;
-    private Button btnDecodeAudio, btn_encodeAudio, btnReadMediaInfo, btnReadMediaMetadata,btn_encodeVideo,btn_nativePlay;
+    private Button btnDecodeAudio, btn_encodeAudio, btnReadMediaInfo, btnReadMediaMetadata,btn_encodeVideo,btn_nativePlay,
+                   btnDecodeVideo;
     private ProgressBar audioEncodeProgressBar;
 
     @Override
@@ -61,6 +62,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btn_encodeVideo.setOnClickListener(this);
         btn_nativePlay = findViewById(R.id.btn_nativePlay);
         btn_nativePlay.setOnClickListener(this);
+        btnDecodeVideo = findViewById(R.id.btn_DecodeVideo);
+        btnDecodeVideo.setOnClickListener(this);
 
 
     }
@@ -193,6 +196,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.btn_encodeVideo:
                 File videoFile = createAssignFile("/sdcard/hh/encodeVideoDemo.mp4");
                 nativeFFmpeg.encodeVideo(videoFile,"mpeg4");
+                break;
+
+            case R.id.btn_DecodeVideo:
+                File decodeSrcFile = createAssignFile("sdcard/hh/test.mp4");
+                File outFile = createAssignFile("sdcard/hh/decodeVideoDemo.mp4");
+                nativeFFmpeg.decodeVideo(decodeSrcFile,outFile);
                 break;
 
             case R.id.btn_nativePlay:

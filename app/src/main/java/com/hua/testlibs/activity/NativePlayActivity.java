@@ -30,6 +30,7 @@ public class NativePlayActivity extends Activity {
     private SurfaceView sfv;//能够播放图像的控件
     private SeekBar sb;//进度条
     private String path = "/sdcard/hh/test.mp4";//本地文件路径
+//        private String path = "/sdcard/hh/man.avi";//本地文件路径
     private SurfaceHolder holder;
     private MediaPlayer player;//媒体播放器
     private Button Play;//播放按钮
@@ -111,7 +112,7 @@ public class NativePlayActivity extends Activity {
     }
 
     private void play() {
-
+        Log.d("HH","MediaPlay Java Layer");
         Play.setEnabled(false);//在播放时不允许再点击播放按钮
 
         if (isPause) {//如果是暂停状态下播放，直接start
@@ -130,6 +131,9 @@ public class NativePlayActivity extends Activity {
 
         try {
             player = new MediaPlayer();
+            if(player != null) {
+                Log.d("HH", "play: player != null");
+            }
             player.setDataSource(path);
             player.setDisplay(holder);//将影像播放控件与媒体播放控件关联起来
 
@@ -163,14 +167,17 @@ public class NativePlayActivity extends Activity {
                     player.start();
                 }
             });
-
+            if(player != null)
             player.prepareAsync();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void play(View v) {
+        nativeFFmpeg.nativePlayStop(true);
+
         play();
         Log.d("HH", path);
     }
@@ -202,6 +209,7 @@ public class NativePlayActivity extends Activity {
     }
 
     private void stop() {
+        Log.d("HH", "stop: MediaPlayer Stop");
         isPause = false;
         if (player != null) {
             sb.setProgress(0);
@@ -230,6 +238,7 @@ public class NativePlayActivity extends Activity {
 
     public void nativePlayVideo(View view) {
         nativePlayVideoClick = !nativePlayVideoClick;
+        stop();
         if (nativePlayVideoClick) {
             nativeFFmpeg.nativePlayStop(false);
             fFmpegPlayThread = new FFmpegPlayThread();
@@ -260,7 +269,7 @@ public class NativePlayActivity extends Activity {
     class FFmpegPlayThread extends Thread {
         @Override
         public void run() {
-            nativeFFmpeg.nativePlay("/sdcard/hh/test.mp4", holder.getSurface());
+            nativeFFmpeg.nativePlay(path, holder.getSurface());
         }
     }
 }
