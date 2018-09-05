@@ -13,13 +13,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="请输入文件名称例如：aa.mp4,务必确保文件放在sdcard目录下"/>
-
+<FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
     <SurfaceView
         android:id="@+id/sfv"
         android:layout_width="match_parent"
         android:layout_marginTop="10dp"
         android:layout_height="350dp" />
-
+    <SurfaceView
+        android:id="@+id/sfv2"
+        android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_height="350dp" />
+</FrameLayout>
     <SeekBar
         android:id="@+id/sb"
         android:layout_width="match_parent"

@@ -111,13 +111,13 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlay(JNIEnv *env, jobject instance,
 
     int frameFinished;
     AVPacket packet;
-    while (av_read_frame(pFormatCtx, &packet) >= 0 && !nativePlayerStop) {
+    while (av_read_frame(pFormatCtx, &packet) >= 0) {
         // Is this a packet from the video stream?
         if (packet.stream_index == bestVideoStream) {
             // Decode video frame
             avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
             // 并不是decode一次就可解码出一帧
-            if (frameFinished) {
+            if (frameFinished && !nativePlayerStop) {
                 // lock native window buffer
                 ANativeWindow_lock(nativeWindow, &windowBuffer, 0);
 
@@ -136,6 +136,17 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlay(JNIEnv *env, jobject instance,
                     memcpy(dst + h * dstStride, src + h * srcStride, srcStride);
                 }
                 ANativeWindow_unlockAndPost(nativeWindow);
+            }
+            if(nativePlayerStop) {
+                // make sure we don't leak native windows
+                if (nativeWindow != NULL) {
+                    ALOGE("Free native Window");
+                    ANativeWindow_release(nativeWindow);
+
+                    nativeWindow = NULL;
+                }
+                av_packet_unref(&packet);
+                break;
             }
 
         }

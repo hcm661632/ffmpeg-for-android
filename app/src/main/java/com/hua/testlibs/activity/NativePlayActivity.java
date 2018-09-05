@@ -27,11 +27,11 @@ import java.util.TimerTask;
  */
 public class NativePlayActivity extends Activity {
 
-    private SurfaceView sfv;//能够播放图像的控件
+    private SurfaceView sfv,sfv2;//能够播放图像的控件
     private SeekBar sb;//进度条
     private String path = "/sdcard/hh/test.mp4";//本地文件路径
 //        private String path = "/sdcard/hh/man.avi";//本地文件路径
-    private SurfaceHolder holder;
+    private SurfaceHolder holder,nativeSurfaceHolder;
     private MediaPlayer player;//媒体播放器
     private Button Play;//播放按钮
     private Timer timer;//定时器
@@ -51,12 +51,14 @@ public class NativePlayActivity extends Activity {
     //初始化控件，并且为进度条和图像控件添加监听
     private void initView() {
         sfv = (SurfaceView) findViewById(R.id.sfv);
+        sfv2 = (SurfaceView) findViewById(R.id.sfv2);
         sb = (SeekBar) findViewById(R.id.sb);
         Play = (Button) findViewById(R.id.play);
         et = (EditText) findViewById(R.id.et);
         Play.setEnabled(false);
 
         holder = sfv.getHolder();
+        nativeSurfaceHolder = sfv2.getHolder();
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
         sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -177,7 +179,8 @@ public class NativePlayActivity extends Activity {
 
     public void play(View v) {
         nativeFFmpeg.nativePlayStop(true);
-
+        sfv.setVisibility(View.VISIBLE);
+        sfv2.setVisibility(View.GONE);
         play();
         Log.d("HH", path);
     }
@@ -238,6 +241,8 @@ public class NativePlayActivity extends Activity {
 
     public void nativePlayVideo(View view) {
         nativePlayVideoClick = !nativePlayVideoClick;
+        sfv2.setVisibility(View.VISIBLE);
+        sfv.setVisibility(View.GONE);
         stop();
         if (nativePlayVideoClick) {
             nativeFFmpeg.nativePlayStop(false);
@@ -269,7 +274,7 @@ public class NativePlayActivity extends Activity {
     class FFmpegPlayThread extends Thread {
         @Override
         public void run() {
-            nativeFFmpeg.nativePlay(path, holder.getSurface());
+            nativeFFmpeg.nativePlay(path, nativeSurfaceHolder.getSurface());
         }
     }
 }
