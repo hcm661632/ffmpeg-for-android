@@ -53,8 +53,9 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
     int ret;
 
     ret = avcodec_send_packet(dec_ctx, pkt);
+
     if (ret < 0) {
-        fprintf(stderr, "Error sending a packet for decoding\n");
+        ALOGE("Error sending a packet for decoding %s",av_err2str(ret));
         exit(1);
     }
 
@@ -63,11 +64,11 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             return;
         else if (ret < 0) {
-            fprintf(stderr, "Error during decoding\n");
+            ALOGE("Error during decoding %s",av_err2str(ret));
             exit(1);
         }
 
-        printf("saving frame %3d\n", dec_ctx->frame_number);
+        ALOGD("saving frame %3d\n", dec_ctx->frame_number);
         fflush(stdout);
 
         /* the picture is allocated by the decoder. no need to
@@ -144,23 +145,25 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_decodeVideo(JNIEnv *env, jobject instance
     /* set end of buffer to 0 (this ensures that no overreading happens for damaged MPEG streams) */
     memset(inbuf + INBUF_SIZE, 0, AV_INPUT_BUFFER_PADDING_SIZE);
     AVPacket *outPkt = av_packet_alloc();
-    while (feof(f)) {
+
+    while (!feof(f)) {
         /* read raw data from the input file */
         data_size = fread(inbuf,1,INBUF_SIZE,f);
         if(!data_size) break;
         /* use the parser to split the data into frames */
         data = inbuf;
+
         while (data_size > 0) {
             ret = av_parser_parse2(pAVCodecParserContext,pAVCodecContext,&outPkt->data,&outPkt->size,data,data_size,
                              AV_NOPTS_VALUE,AV_NOPTS_VALUE,0);
             if(ret < 0) {
-                ALOGD( "Error while parsing %s",av_err2str(ret));
+                ALOGE( "Error while parsing %s",av_err2str(ret));
                 exit(1);
             }
             data      += ret;
             data_size -= ret;
 
-            if (pkt->size)
+            if (outPkt->size)
                 decode(pAVCodecContext, pAVFrame, outPkt, outFileName);
         }
 
@@ -169,7 +172,7 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_decodeVideo(JNIEnv *env, jobject instance
     decode(pAVCodecContext, pAVFrame, NULL, outFileName);
 
     fclose(f);
-
+//    printCodecInfo(pAVCodec);
     avformat_close_input(&avFormatContext);
     av_parser_close(pAVCodecParserContext);
     avcodec_free_context(&pAVCodecContext);
@@ -178,7 +181,7 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_decodeVideo(JNIEnv *env, jobject instance
     av_packet_free(&outPkt);
 
 
-//    printCodecInfo(pAVCodec);
+
 
 }
 

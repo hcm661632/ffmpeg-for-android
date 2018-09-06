@@ -199,7 +199,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 break;
 
             case R.id.btn_DecodeVideo:
-                File decodeSrcFile = createAssignFile("sdcard/hh/test.mp4");
+//                File decodeSrcFile = createAssignFile("sdcard/hh/test.mp4");
+                File decodeSrcFile = createAssignFile("sdcard/hh/man.avi");
                 File outFile = createAssignFile("sdcard/hh/decodeVideoDemo.mp4");
                 nativeFFmpeg.decodeVideo(decodeSrcFile,outFile);
                 break;
