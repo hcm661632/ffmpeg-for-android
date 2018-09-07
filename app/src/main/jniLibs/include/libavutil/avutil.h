@@ -20,7 +20,9 @@
 
 #ifndef AVUTIL_AVUTIL_H
 #define AVUTIL_AVUTIL_H
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * @file
  * @ingroup lavu
@@ -305,9 +307,8 @@ char av_get_picture_type_char(enum AVPictureType pict_type);
 /**
  * Return x default pointer in case p is NULL.
  */
-static inline void *av_x_if_null(const void *p, const void *x)
-{
-    return (void *)(intptr_t)(p ? p : x);
+static inline void *av_x_if_null(const void *p, const void *x) {
+    return (void *) (intptr_t) (p ? p : x);
 }
 
 /**
@@ -361,5 +362,7 @@ char *av_fourcc_make_string(char *buf, uint32_t fourcc);
  * @}
  * @}
  */
-
+#ifdef __cplusplus
+};
+#endif
 #endif /* AVUTIL_AVUTIL_H */

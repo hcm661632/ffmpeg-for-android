@@ -31,6 +31,7 @@ public class NativeFFmpeg {
 
     public native void encodeVideo(File outFile,final String codecName);
     public native void decodeVideo(File srcFile,File outFile);
+    public native void filteringVideo(String fileName);
 
 
     /**

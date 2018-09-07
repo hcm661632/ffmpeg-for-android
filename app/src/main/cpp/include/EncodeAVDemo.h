@@ -46,6 +46,11 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_decodeVideo(JNIEnv *env, jobject instance
                                                     jobject outFile);
 
 
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_filteringVideo(JNIEnv *env, jobject instance,
+                                                      jstring fileName_);
+
+
 const char *getEncodeFilePath(JNIEnv *env,  jobject outFile);
 #ifdef __cplusplus
 }

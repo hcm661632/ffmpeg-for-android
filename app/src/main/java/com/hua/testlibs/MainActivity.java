@@ -35,7 +35,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private NativeFFmpeg nativeFFmpeg;
     private Button btnDecodeAudio, btn_encodeAudio, btnReadMediaInfo, btnReadMediaMetadata,btn_encodeVideo,btn_nativePlay,
-                   btnDecodeVideo;
+                   btnDecodeVideo,btnFilteringVideo;
     private ProgressBar audioEncodeProgressBar;
 
     @Override
@@ -64,7 +64,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btn_nativePlay.setOnClickListener(this);
         btnDecodeVideo = findViewById(R.id.btn_DecodeVideo);
         btnDecodeVideo.setOnClickListener(this);
-
+        btnFilteringVideo = findViewById(R.id.btn_FilteringVideo);
+        btnFilteringVideo.setOnClickListener(this);
 
     }
 
@@ -202,13 +203,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
 //                File decodeSrcFile = createAssignFile("sdcard/hh/test.mp4");
                 File decodeSrcFile = createAssignFile("sdcard/hh/man.avi");
                 File outFile = createAssignFile("sdcard/hh/decodeVideoDemo.mp4");
-                nativeFFmpeg.decodeVideo(decodeSrcFile,outFile);
+//                nativeFFmpeg.decodeVideo(decodeSrcFile,outFile);
                 break;
 
             case R.id.btn_nativePlay:
                 startActivity(new Intent(this,NativePlayActivity.class));
                 break;
-
+            case R.id.btn_FilteringVideo:
+                nativeFFmpeg.filteringVideo("/sdcard/hh/decodeVideoDemo.mp4-997");
+//                nativeFFmpeg.filteringVideo("/sdcard/hh/man.avi");
+//                nativeFFmpeg.filteringVideo("/sdcard/hh/test.mp4");
+                break;
             default:
                 break;
         }

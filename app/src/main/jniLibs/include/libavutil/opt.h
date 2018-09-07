@@ -867,7 +867,7 @@ int av_opt_serialize(void *obj, int opt_flags, int flags, char **buffer,
  */
 
 #ifdef __cplusplus
-}
+};
 #endif
 
 #endif /* AVUTIL_OPT_H */
