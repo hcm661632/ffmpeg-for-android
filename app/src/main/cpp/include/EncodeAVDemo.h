@@ -51,6 +51,12 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_filteringVideo(JNIEnv *env, jobject insta
                                                       jstring fileName_);
 
 
+
+
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlayAudio(JNIEnv *env, jobject instance,
+                                                       jstring fileName_, jobject surface);
+
 const char *getEncodeFilePath(JNIEnv *env,  jobject outFile);
 #ifdef __cplusplus
 }

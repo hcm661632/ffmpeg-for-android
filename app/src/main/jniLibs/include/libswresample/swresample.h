@@ -126,6 +126,11 @@
 
 #include "libswresample/version.h"
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @name Option constants
  * These constants are used for the @ref avoptions interface for lswr.
@@ -248,8 +253,10 @@ int swr_is_initialized(struct SwrContext *s);
  * @return NULL on error, allocated context otherwise
  */
 struct SwrContext *swr_alloc_set_opts(struct SwrContext *s,
-                                      int64_t out_ch_layout, enum AVSampleFormat out_sample_fmt, int out_sample_rate,
-                                      int64_t  in_ch_layout, enum AVSampleFormat  in_sample_fmt, int  in_sample_rate,
+                                      int64_t out_ch_layout, enum AVSampleFormat out_sample_fmt,
+                                      int out_sample_rate,
+                                      int64_t in_ch_layout, enum AVSampleFormat in_sample_fmt,
+                                      int in_sample_rate,
                                       int log_offset, void *log_ctx);
 
 /**
@@ -304,7 +311,7 @@ void swr_close(struct SwrContext *s);
  * @return number of samples output per channel, negative value on error
  */
 int swr_convert(struct SwrContext *s, uint8_t **out, int out_count,
-                                const uint8_t **in , int in_count);
+                const uint8_t **in, int in_count);
 
 /**
  * Convert the next timestamp from input to output
@@ -575,5 +582,9 @@ int swr_config_frame(SwrContext *swr, const AVFrame *out, const AVFrame *in);
  * @}
  * @}
  */
+#ifdef __cplusplus
+};
+#endif
+
 
 #endif /* SWRESAMPLE_SWRESAMPLE_H */

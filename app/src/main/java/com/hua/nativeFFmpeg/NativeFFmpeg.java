@@ -1,5 +1,8 @@
 package com.hua.nativeFFmpeg;
 
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.util.Log;
 import android.view.Surface;
 
@@ -27,6 +30,7 @@ public class NativeFFmpeg {
     public native void encodeAudioWithListener(File outFile,IAudioEncodeProgressListener listener);
     public native void encodeAudioWhtiPthread(String filePath);
     public native void nativePlay(String fileName,Surface surface);
+    public native void nativePlayAudio(String fileName,Surface surface);
     public native void nativePlayStop(boolean stop);
 
     public native void encodeVideo(File outFile,final String codecName);
@@ -40,6 +44,38 @@ public class NativeFFmpeg {
      */
     public void getEncodeProcess(int processPercent){
 
+    }
+
+    /**
+     * @param sampleRateInHz 当前 声音的频率
+     * @param channelsNB 声道个数
+     * @return
+     */
+    public AudioTrack createAudioTrack(int sampleRateInHz, int channelsNB) {
+
+        int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+        //声道布局，默认设置立体声
+        int channelConfig;
+        if(channelsNB==1){
+            channelConfig = AudioFormat.CHANNEL_OUT_MONO;
+        }else if(channelsNB==2){
+            channelConfig = AudioFormat.CHANNEL_OUT_STEREO;
+        }else {
+            channelConfig = AudioFormat.CHANNEL_OUT_STEREO;
+        }
+        int bufferSizeInBytes = AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+
+        AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+                sampleRateInHz, channelConfig,
+                audioFormat, bufferSizeInBytes,
+                AudioTrack.MODE_STREAM);
+
+        return audioTrack;
+    }
+
+    void testAudioTrack(){
+        AudioTrack audioTrack = createAudioTrack(44100, 2);
+        audioTrack.play();
     }
 
 
