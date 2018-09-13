@@ -249,7 +249,7 @@ public class NativePlayActivity extends Activity {
             nativeFFmpeg.nativePlayStop(false);
             fFmpegPlayThread = new FFmpegPlayThread();
             fFmpegPlayAudioThread = new FFmpegPlayAudioThread();
-            fFmpegPlayAudioThread.start();
+//            fFmpegPlayAudioThread.start();
             fFmpegPlayThread.start();
         } else {
             nativeFFmpeg.nativePlayStop(true);
@@ -285,6 +285,7 @@ public class NativePlayActivity extends Activity {
         @Override
         public void run() {
             nativeFFmpeg.nativePlay(path, nativeSurfaceHolder.getSurface());
+//            nativeFFmpeg.nativePlay("sdcard/hh/xrdg.mp3", nativeSurfaceHolder.getSurface());
         }
     }
 }
