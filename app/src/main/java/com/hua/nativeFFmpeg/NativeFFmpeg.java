@@ -29,8 +29,10 @@ public class NativeFFmpeg {
     public native void encodeAudio(File outFile,int bitRate,int sampleRate,int best_ch_layout,int channels,IAudioEncodeProgressListener listener);
     public native void encodeAudioWithListener(File outFile,IAudioEncodeProgressListener listener);
     public native void encodeAudioWhtiPthread(String filePath);
-    public native void nativePlay(String fileName,Surface surface);
-    public native void nativePlayAudio(String fileName,Surface surface);
+    public native void nativePlay_VideoAndAudio(String fileName,Surface surface);
+    public native void nativePlay_VideoOnly_NewAPI(String fileName,Surface surface);
+    public native void nativePlay_VideoOnly_OldAPI(String fileName,Surface surface);
+    public native void nativePlay_AudioOnly_NewAPI(String fileName);
     public native void nativePlayStop(boolean stop);
 
     public native void encodeVideo(File outFile,final String codecName);

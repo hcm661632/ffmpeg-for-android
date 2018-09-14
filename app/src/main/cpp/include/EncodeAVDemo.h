@@ -5,25 +5,24 @@
 
 #ifndef TESTFFMPEGLIBS_ENCODEAVDEMO_H
 #define TESTFFMPEGLIBS_ENCODEAVDEMO_H
+
 #include <jni.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-
-
 void JNICALL
 Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudio(JNIEnv *env, jobject instance, jobject outFile,
                                                    jint bitRate, jint sampleRate,
-                                                   jint best_ch_layout, jint channels,jobject listenerobj);
-
+                                                   jint best_ch_layout, jint channels,
+                                                   jobject listenerobj);
 
 
 void JNICALL
 Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeAudioWithListener(JNIEnv *env, jobject instance,
                                                                jobject outFile, jobject listener);
-
 
 
 void JNICALL
@@ -32,8 +31,23 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_encodeVideo(JNIEnv *env, jobject instance
 
 
 void JNICALL
-Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlay(JNIEnv *env, jobject instance, jstring fileName_,
-                                                  jobject surface);
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlay_1VideoAndAudio(JNIEnv *env, jobject instance,
+                                                                 jstring fileName_,
+                                                                 jobject surface);
+
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlay_1VideoOnly_1NewAPI(JNIEnv *env, jobject instance,
+                                                                     jstring input,
+                                                                     jobject surface);
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlay_1VideoOnly_1OldAPI(JNIEnv *env, jobject instance,
+                                                                      jstring input,
+                                                                      jobject surface);
+
+
+void JNICALL
+Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlay_1AudioOnly_1NewAPI(JNIEnv *env, jobject instance,
+                                                                     jstring fileName_);
 
 
 void JNICALL
@@ -43,7 +57,7 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlayStop(JNIEnv *env, jobject insta
 
 void JNICALL
 Java_com_hua_nativeFFmpeg_NativeFFmpeg_decodeVideo(JNIEnv *env, jobject instance, jobject srcFile,
-                                                    jobject outFile);
+                                                   jobject outFile);
 
 
 void JNICALL
@@ -53,20 +67,10 @@ Java_com_hua_nativeFFmpeg_NativeFFmpeg_filteringVideo(JNIEnv *env, jobject insta
 
 
 
-void JNICALL
-Java_com_hua_nativeFFmpeg_NativeFFmpeg_nativePlayAudio(JNIEnv *env, jobject instance,
-                                                       jstring fileName_, jobject surface);
-
-const char *getEncodeFilePath(JNIEnv *env,  jobject outFile);
+const char *getEncodeFilePath(JNIEnv *env, jobject outFile);
 #ifdef __cplusplus
 }
 #endif
-
-
-
-
-
-
 
 
 #endif //TESTFFMPEGLIBS_ENCODEAVDEMO_H

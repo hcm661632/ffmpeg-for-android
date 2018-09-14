@@ -29,8 +29,8 @@ public class NativePlayActivity extends Activity {
 
     private SurfaceView sfv,sfv2;//能够播放图像的控件
     private SeekBar sb;//进度条
-//    private String path = "/sdcard/hh/test.mp4";//本地文件路径
-        private String path = "/sdcard/hh/man.avi";//本地文件路径
+    private String path = "/sdcard/hh/test.mp4";//本地文件路径
+//        private String path = "/sdcard/hh/man.avi";//本地文件路径
     private SurfaceHolder holder,nativeSurfaceHolder;
     private MediaPlayer player;//媒体播放器
     private Button Play;//播放按钮
@@ -231,7 +231,6 @@ public class NativePlayActivity extends Activity {
     }
 
     FFmpegPlayThread fFmpegPlayThread;
-    FFmpegPlayAudioThread fFmpegPlayAudioThread;
 
     /**
      * 用特殊的方式来播放
@@ -248,8 +247,6 @@ public class NativePlayActivity extends Activity {
         if (nativePlayVideoClick) {
             nativeFFmpeg.nativePlayStop(false);
             fFmpegPlayThread = new FFmpegPlayThread();
-            fFmpegPlayAudioThread = new FFmpegPlayAudioThread();
-//            fFmpegPlayAudioThread.start();
             fFmpegPlayThread.start();
         } else {
             nativeFFmpeg.nativePlayStop(true);
@@ -274,18 +271,13 @@ public class NativePlayActivity extends Activity {
         super.onDestroy();
     }
 
-    class FFmpegPlayAudioThread extends Thread{
-        @Override
-        public void run() {
-            nativeFFmpeg.nativePlayAudio(path, nativeSurfaceHolder.getSurface());
-        }
-    }
+
 
     class FFmpegPlayThread extends Thread {
         @Override
         public void run() {
-            nativeFFmpeg.nativePlay(path, nativeSurfaceHolder.getSurface());
-//            nativeFFmpeg.nativePlay("sdcard/hh/xrdg.mp3", nativeSurfaceHolder.getSurface());
+            nativeFFmpeg.nativePlay_VideoAndAudio(path,nativeSurfaceHolder.getSurface());
+//            nativeFFmpeg.nativePlay_AudioOnly_NewAPI("sdcard/hh/xrdg.mp3");
         }
     }
 }
